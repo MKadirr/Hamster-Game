@@ -349,15 +349,4 @@ elif tour == 52:
     print("Bravo, tu as passer 52 semaines")
     print("tu as obtenu %s $.felicitation." % argent)
     
-os.systeme("pause")
-
-    
-        
-       
-
-
-
-
-
-
-        
+intput()
