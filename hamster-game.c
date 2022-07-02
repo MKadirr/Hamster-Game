@@ -157,23 +157,100 @@ int game(int type, const struct Constant *c, struct Database g)
 
             humanSelection(&g, c, pxHamster, pxFood, &ps);
         }
+        if(type == 1)
+        {
+            ps.femSolded = 0;
+            ps.maleSolded = 1;
+            ps.foodBuy = 10;
+            ps.cageBuy = 3;
+        }
 
         g.adultMale -= ps.maleSolded;
-        g.adulteFem -= ps.femSolded;
+        g.adultFem -= ps.femSolded;
         g.food += ps.foodBuy;
-        g.cage += pas.cageBuy;
+        g.cage += ps.cageBuy;
 
-        g.money = g.money + ((ps.maleSolded + ps. femSolded)*pxHamster) - (ps.cageBuy*c.pxCage + ps.foodBuy*pxFood);
+        g.money = g.money + ((ps.maleSolded + ps.femSolded)*pxHamster) - (ps.cageBuy*c->pxCage + ps.foodBuy*pxFood);
 
         //create the babies
-        int couple = (g.adulteFem<g.adultMale) ? adulteFem : adultMale;
-        int newBabies = rand_a_b(c->fertilmin*couple, c->fertilMax*couple);
+        int couple = (g.adultFem<g.adultMale) ? g.adultFem : g.adultMale;
+        int newBabies = rand_a_b(c->fertilMin*couple, c->fertilMax*couple);
+        printf("babies : %d",newBabies);
 
-        //kill time
+        //kill time:
+        //  from cage limitation
         totHamster = g.adultMale + g.adultFem + g.kidFem2 + g.kidMale2 + newBabies;
-        if(totalhamster > (g.cage * c->spaceCage)) newBabies = (g.cage * c->spaceCage) - totalhamster;
+        if(totHamster > (g.cage * c->spaceCage)) newBabies = (g.cage * c->spaceCage) - totHamster;
+        totHamster = g.adultMale + g.adultFem + g.kidFem2 + g.kidMale2 + newBabies;
+        //  from food:
+        int death = (totHamster<=g.food/c->foodWeek) ? 0 : g.food/c->foodWeek - totHamster;
+        g.food = (death != 0) ? g.food = 0 : (g.food - totHamster*c->foodWeek);
+        printf("death : %d",death);
 
+        if(newBabies<=death)
+        {
+            death -= newBabies;
+            newBabies = 0;
+            if(death != 0 && (g.kidFem2+g.kidMale2) <= death)
+            {
+                death -= g.kidFem2+g.kidMale2;
+                g.kidFem2 = 0;
+                g.kidMale2 = 0;
 
+                if(death != 0 && (g.adultMale+g.adultFem) <= death)
+                {
+                    death = 0;
+                    g.adultFem = 0;
+                    g.adultMale = 0;
+                }
+                else
+                {
+                    int mid = (int) death/2;
+                    if(g.adultFem<mid)
+                    {
+                        death -= g.adultFem;
+                        g.adultFem = 0;
+                        g.adultMale -= death;
+                    }
+                    else if(g.adultMale<(death-mid))
+                    {
+                        death -= g.adultMale;
+                        g.adultMale = 0;
+                        g.adultFem -= death;
+                    }
+                    else
+                    {
+                        g.adultFem -= mid;
+                        g.adultMale += death - mid;
+                    }
+                }
+            }
+            else
+            {
+                int mid = (int) death/2;
+                if(g.kidFem2<mid)
+                {
+                    death -= g.kidFem2;
+                    g.kidFem2 = 0;
+                    g.kidMale2 -= death;
+                }
+                else if(g.kidMale2<(death-mid))
+                {
+                    death -= g.kidMale2;
+                    g.kidMale2 = 0;
+                    g.kidFem2 -= death;
+                }
+                else
+                {
+                    g.kidFem2 -= mid;
+                    g.kidMale2 += death - mid;
+                }
+            }
+        }
+        else {
+            newBabies -= death;
+            death = 0;
+        }
     }
 
     return g.money;
@@ -213,8 +290,7 @@ int main(int argc, char *argv[])
     g.cage = 1;
     g.week = 0;
 
-    struct PurchaseSale ps;
-    humanSelection(&g, &c, 30, 10, &ps);
+    game(1, &c, g);
     //if(argc<2) game(0);//set seed
     //else game(rand(), 0);
 }
@@ -226,7 +302,7 @@ int main(int argc, char *argv[])
     printf("   %d adultes males" , adultMale)
     printf("   %d adultes femmelles" , adultFem)
     printf("   %d kids males" , kidMale2)
-    printf("   %d kids femelles" , kidfem2)
+    printf("   %d kids femelles" , kidFem2)
     printf("   %d hamsters au total" , totalhamster)
     printf("   %d kg de nourriture" , nourriture)
     printf("   %d cages" , cage)
