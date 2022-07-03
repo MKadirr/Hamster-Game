@@ -15,33 +15,33 @@ struct PurchaseSale{
 };
 
 struct Database{
-    unsigned int adultMale;
-    unsigned int adultFem;
-    unsigned int kidMale;
-    unsigned int kidFem;
-    unsigned int kidMale2;
-    unsigned int kidFem2;
-    unsigned int money;
-    unsigned double food;
-    unsigned int cage;
-    unsigned int week;
+    int adultMale;
+    int adultFem;
+    int kidMale;
+    int kidFem;
+    int kidMale2;
+    int kidFem2;
+    int money;
+    double food;
+    int cage;
+    int week;
 };
 
 struct Constant{
     int seed;
-    unsigned int weekMax;
-    unsigned double foodWeek;
-    unsigned short pxCage;
-    unsigned short spaceCage;
+    int weekMax;
+    float foodWeek;
+    short pxCage;
+    short spaceCage;
 
-    unsigned short fertilMin;
-    unsigned short fertilMax;
+    short fertilMin;
+    short fertilMax;
 
-    unsigned short pxHamsterMin;
-    unsigned short pxHamsterMax;
+    short pxHamsterMin;
+    short pxHamsterMax;
 
-    unsigned short pxFoodMin;
-    unsigned short pxFoodMax;
+    short pxFoodMin;
+    short pxFoodMax;
 };
 
 /*
@@ -219,61 +219,59 @@ int game(int type, const struct Constant *c, struct Database g)
         int couple = (g.adultFem<g.adultMale) ? g.adultFem : g.adultMale;
         int newBabies = (couple==0) ? 0 : rand_a_b((c->fertilMin)*couple, (c->fertilMax)*couple); // paren
 
-        //printf("babies : %d\n",newBabies);
-
         //kill time:
         //  from cage limitation
+
+        if(totHamster+newBabies > (g.cage * c->spaceCage)) newBabies = (g.cage * (c->spaceCage)) - totHamster;
+
         totHamster = g.adultMale + g.adultFem + g.kidFem2 + g.kidMale2 + newBabies;
-        if(totHamster > (g.cage * c->spaceCage)) newBabies = (g.cage * (c->spaceCage)) - totHamster;
-        totHamster = g.adultMale + g.adultFem + g.kidFem2 + g.kidMale2 + newBabies;
-        printf("   %d hamsters au total\n" , totHamster);
+
         //  from food:
-        int death = (totHamster<=g.food/c->foodWeek) ? 0 : g.food/c->foodWeek - totHamster;
-        printf("   %f kg de nourriture 1\n" , g.food);
+        int death = (totHamster<=g.food/c->foodWeek) ? 0 :  totHamster - g.food/c->foodWeek;
+
         g.food = (death != 0) ?  0 : (g.food - totHamster * (c->foodWeek)); // paren
-        printf("   %f kg de nourriture 2\n" , g.food);
-        printf("death : %d\n",death);
+
 
         if(newBabies<=death)
         {
-            printf("1\n");
+            //printf("1\n");
             death -= newBabies;
             newBabies = 0;
             if(death != 0 && (g.kidFem2+g.kidMale2) <= death)
             {
-                printf("1-1\n");
+                //printf("1-1\n");
                 death -= g.kidFem2+g.kidMale2;
                 g.kidFem2 = 0;
                 g.kidMale2 = 0;
 
                 if(death != 0 && (g.adultMale+g.adultFem) <= death)
                 {
-                    printf("1-1-1\n");
+                    //printf("1-1-1\n");
                     death = 0;
                     g.adultFem = 0;
                     g.adultMale = 0;
                 }
                 else
                 {
-                    printf("1-1-2'\n");
+                    //printf("1-1-2'\n");
                     int mid = (int) death/2;
                     if(g.adultFem<mid)
                     {
-                        printf("1-1-2-1\n");
+                        //printf("1-1-2-1\n");
                         death -= g.adultFem;
                         g.adultFem = 0;
                         g.adultMale -= death;
                     }
                     else if(g.adultMale<(death-mid))
                     {
-                        printf("1-1-2-2'\n");
+                        //printf("1-1-2-2'\n");
                         death -= g.adultMale;
                         g.adultMale = 0;
                         g.adultFem -= death;
                     }
                     else
                     {
-                        printf("1-1-2-3\n");
+                        //printf("1-1-2-3\n");
                         g.adultFem -= mid;
                         g.adultMale += death - mid;
                     }
@@ -281,25 +279,25 @@ int game(int type, const struct Constant *c, struct Database g)
             }
             else
             {
-                printf("1-2'\n");
+                //printf("1-2'\n");
                 int mid = (int) death/2;
                 if(g.kidFem2<mid)
                 {
-                    printf("1-2-1\n");
+                    //printf("1-2-1\n");
                     death -= g.kidFem2;
                     g.kidFem2 = 0;
                     g.kidMale2 -= death;
                 }
                 else if(g.kidMale2<(death-mid))
                 {
-                    printf("1-2-2\n");
+                    //printf("1-2-2\n");
                     death -= g.kidMale2;
                     g.kidMale2 = 0;
                     g.kidFem2 -= death;
                 }
                 else
                 {
-                    printf("1-2-3\n");
+                    //printf("1-2-3\n");
                     g.kidFem2 -= mid;
                     g.kidMale2 += death - mid;
                 }
@@ -311,8 +309,6 @@ int game(int type, const struct Constant *c, struct Database g)
             death = 0;
         }
         totHamster = g.adultMale + g.adultFem + g.kidFem2 + g.kidMale2 + newBabies;
-        printf("   %d hamsters au total\n" , totHamster);
-        printf("babies : %d\n",newBabies);
         g.kidFem = rand_a_b(0, newBabies);
         g.kidMale = newBabies - g.kidFem;
 
