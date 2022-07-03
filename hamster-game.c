@@ -48,6 +48,10 @@ struct Constant{
 Fonction that return random number beetwen min and max exclu
 */
 int rand_a_b(int min, int max);
+/*provide a secure input for int*/
+int secureInput(const char* text, const int dispo, const int unite);
+
+
 
 /* the whole game */
 int game(int type, const struct Constant *c, struct Database g);
@@ -55,8 +59,6 @@ int game(int type, const struct Constant *c, struct Database g);
 /*fonction for human input*/
 void humanSelection(const struct Database *g, const struct Constant *c, int pxHamster, int pxCage, struct PurchaseSale *ps);
 
-/*provide a secure input for int*/
-int secureInput(const char* text, const int dispo, const int unite);
 
 
 int secureInput(const char* text, int available, int unite)
@@ -82,7 +84,10 @@ int secureInput(const char* text, int available, int unite)
     return result;
 }
 
-int rand_a_b(int min, int max) {return ((rand()%(max-min)) + min);}
+int rand_a_b(int min, int max) 
+{
+    return ((rand()%(max-min)) + min);
+}
 
 void humanSelection(const struct Database *g, const struct Constant *c, int pxHamster, int pxFood, struct PurchaseSale *ps)
 {
@@ -123,7 +128,7 @@ int game(int type, const struct Constant *c, struct Database g)
     int pxFood;
 
     
-    while(g.week<=c->weekMax)
+    while(g.week<c->weekMax)
     {
         g.week++;
         pxHamster = rand_a_b(c->pxHamsterMin, c->pxHamsterMax+1);
@@ -139,42 +144,59 @@ int game(int type, const struct Constant *c, struct Database g)
         struct PurchaseSale ps;
         if(type == 0)
         {
-            printf("Tt's turn %d" , g.week);
-            printf("You own:");
-            printf("   %d $" , g.money);
-            printf("   %d adultes males" , g.adultMale);
-            printf("   %d adultes femmelles" , g.adultFem);
-            printf("   %d kids males" , g.kidMale2);
-            printf("   %d kids femelles" , g.kidFem2);
-            printf("   %d hamsters au total" , totHamster);
-            printf("   %d kg de nourriture" , g.food);
-            printf("   %d cages" , g.cage);
-            printf("    ");
-            printf("les prix du jour sont:");
-            printf("   les cages coutent %d $" , c->pxCage);
-            printf("   la nourriture coute %d $ le kg" , pxFood);
-            printf("   les hamsters adultes valent %d $" , pxHamster);
+            printf("Tt's turn %d\n" , g.week);
+            printf("You own:\n");
+            printf("   %d $\n" , g.money);
+            printf("   %d adultes males\n" , g.adultMale);
+            printf("   %d adultes femmelles\n" , g.adultFem);
+            printf("   %d kids males\n" , g.kidMale2);
+            printf("   %d kids femelles\n" , g.kidFem2);
+            printf("   %d hamsters au total\n" , totHamster);
+            printf("   %d kg de nourriture\n" , g.food);
+            printf("   %d cages\n" , g.cage);
+            printf("    \n");
+            printf("les prix du jour sont:\n");
+            printf("   les cages coutent %d $\n" , c->pxCage);
+            printf("   la nourriture coute %d $ le kg\n" , pxFood);
+            printf("   les hamsters adultes valent %d $\n" , pxHamster);
 
             humanSelection(&g, c, pxHamster, pxFood, &ps);
         }
         if(type == 1)
         {
+            printf("Tt's turn %d\n" , g.week);
+            printf("You own:\n");
+            printf("   %d $\n" , g.money);
+            printf("   %d adultes males\n" , g.adultMale);
+            printf("   %d adultes femmelles\n" , g.adultFem);
+            printf("   %d kids males\n" , g.kidMale2);
+            printf("   %d kids femelles\n" , g.kidFem2);
+            printf("   %d hamsters au total\n" , totHamster);
+            printf("   %d kg de nourriture\n" , g.food);
+            printf("   %d cages\n" , g.cage);
+            printf("    \n");
+            printf("les prix du jour sont:\n");
+            printf("   les cages coutent %d $\n" , c->pxCage);
+            printf("   la nourriture coute %d $ le kg\n" , pxFood);
+            printf("   les hamsters adultes valent %d $\n" , pxHamster);
+
             ps.femSolded = 0;
             ps.maleSolded = 1;
             ps.foodBuy = 10;
             ps.cageBuy = 3;
         }
-
         g.adultMale -= ps.maleSolded;
         g.adultFem -= ps.femSolded;
         g.food += ps.foodBuy;
         g.cage += ps.cageBuy;
-
+        
         g.money = g.money + ((ps.maleSolded + ps.femSolded)*pxHamster) - (ps.cageBuy*c->pxCage + ps.foodBuy*pxFood);
-
+        printf("b\n");
         //create the babies
         int couple = (g.adultFem<g.adultMale) ? g.adultFem : g.adultMale;
-        int newBabies = rand_a_b(c->fertilMin*couple, c->fertilMax*couple);
+        
+        int newBabies = (couple==0) ? 0 : rand_a_b((c->fertilMin)*couple, (c->fertilMax)*couple);
+        printf("a\n");
         printf("babies : %d",newBabies);
 
         //kill time:
@@ -189,37 +211,44 @@ int game(int type, const struct Constant *c, struct Database g)
 
         if(newBabies<=death)
         {
+            printf("1\n");
             death -= newBabies;
             newBabies = 0;
             if(death != 0 && (g.kidFem2+g.kidMale2) <= death)
             {
+                printf("1-1\n");
                 death -= g.kidFem2+g.kidMale2;
                 g.kidFem2 = 0;
                 g.kidMale2 = 0;
 
                 if(death != 0 && (g.adultMale+g.adultFem) <= death)
                 {
+                    printf("1-1-1\n");
                     death = 0;
                     g.adultFem = 0;
                     g.adultMale = 0;
                 }
                 else
                 {
+                    printf("1-1-2'\n");
                     int mid = (int) death/2;
                     if(g.adultFem<mid)
                     {
+                        printf("1-1-2-1\n");
                         death -= g.adultFem;
                         g.adultFem = 0;
                         g.adultMale -= death;
                     }
                     else if(g.adultMale<(death-mid))
                     {
+                        printf("1-1-2-2'\n");
                         death -= g.adultMale;
                         g.adultMale = 0;
                         g.adultFem -= death;
                     }
                     else
                     {
+                        printf("1-1-2-3\n");
                         g.adultFem -= mid;
                         g.adultMale += death - mid;
                     }
@@ -227,33 +256,40 @@ int game(int type, const struct Constant *c, struct Database g)
             }
             else
             {
+                printf("1-2'\n");
                 int mid = (int) death/2;
                 if(g.kidFem2<mid)
                 {
+                    printf("1-2-1\n");
                     death -= g.kidFem2;
                     g.kidFem2 = 0;
                     g.kidMale2 -= death;
                 }
                 else if(g.kidMale2<(death-mid))
                 {
+                    printf("1-2-2\n");
                     death -= g.kidMale2;
                     g.kidMale2 = 0;
                     g.kidFem2 -= death;
                 }
                 else
                 {
+                    printf("1-2-3\n");
                     g.kidFem2 -= mid;
                     g.kidMale2 += death - mid;
                 }
             }
         }
         else {
+            printf("2\n");
             newBabies -= death;
             death = 0;
         }
+        totHamster = g.adultMale + g.adultFem + g.kidFem2 + g.kidMale2 + newBabies;
+        printf("   %d hamsters au total\n" , totHamster);
     }
 
-    return g.money;
+    //return g.money;
 }
 
 int main(int argc, char *argv[])
@@ -290,25 +326,9 @@ int main(int argc, char *argv[])
     g.cage = 1;
     g.week = 0;
 
-    game(1, &c, g);
+    printf("start\n");
+    game(0, &c, g);
+    printf("end\n");
     //if(argc<2) game(0);//set seed
     //else game(rand(), 0);
 }
-
-/*
-    printf("C'est le tour %d" , week)
-    printf("You own:")
-    printf("   %d $" , money)
-    printf("   %d adultes males" , adultMale)
-    printf("   %d adultes femmelles" , adultFem)
-    printf("   %d kids males" , kidMale2)
-    printf("   %d kids femelles" , kidFem2)
-    printf("   %d hamsters au total" , totalhamster)
-    printf("   %d kg de nourriture" , nourriture)
-    printf("   %d cages" , cage)
-    printf("    ")
-    printf("les prix du jour sont:")
-    printf("   les cages coutent %d $" , pxCage)    
-    printf("   la nourriture coute %d $ le kg" , pxFood)
-    printf("   les hamsters adultes valent %d $" , pxHamster)    
-*/
