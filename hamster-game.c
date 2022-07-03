@@ -129,7 +129,6 @@ void humanSelection(const struct Database *g, const struct Constant *c, int pxHa
 
 int game(int type, const struct Constant *c, struct Database g)
 {
-    srand(c->seed);
     //temp
     int pxHamster;
     int pxFood;
@@ -329,9 +328,14 @@ int main(int argc, char *argv[])
 {
     struct Constant c;
     //set constant
-    if(argc<2) c.seed = atoi(argv[1]);//set seed
-    else c.seed=rand();
-
+    c.seed = 0;
+    if(argc>1)
+    {
+        c.seed = atoi(argv[1]);//set seed
+        srand(c.seed);
+    }
+    else  srand(time(NULL));
+    
     c.weekMax = 52;
     c.foodWeek = 0.1;
     c.pxCage = 100;
