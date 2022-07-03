@@ -15,33 +15,33 @@ struct PurchaseSale{
 };
 
 struct Database{
-    int adultMale;
-    int adultFem;
-    int kidMale;
-    int kidFem;
-    int kidMale2;
-    int kidFem2;
-    int money;
-    float food;
-    int cage;
-    int week;
+    unsigned int adultMale;
+    unsigned int adultFem;
+    unsigned int kidMale;
+    unsigned int kidFem;
+    unsigned int kidMale2;
+    unsigned int kidFem2;
+    unsigned int money;
+    unsigned double food;
+    unsigned int cage;
+    unsigned int week;
 };
 
 struct Constant{
     int seed;
-    int weekMax;
-    float foodWeek;
-    short pxCage;
-    short spaceCage;
+    unsigned int weekMax;
+    unsigned double foodWeek;
+    unsigned short pxCage;
+    unsigned short spaceCage;
 
-    short fertilMin;
-    short fertilMax;
+    unsigned short fertilMin;
+    unsigned short fertilMax;
 
-    short pxHamsterMin;
-    short pxHamsterMax;
+    unsigned short pxHamsterMin;
+    unsigned short pxHamsterMax;
 
-    short pxFoodMin;
-    short pxFoodMax;
+    unsigned short pxFoodMin;
+    unsigned short pxFoodMax;
 };
 
 /*
@@ -49,9 +49,9 @@ Fonction that return random number beetwen min and max exclu
 */
 int rand_a_b(int min, int max);
 /*provide a secure input for int*/
-int secureInput(const char* text, const int dispo, const int unite);
+int secureInput(const char* text, const int available, const int unite);
 
-
+int verification(int value, int available, int unite);
 
 /* the whole game */
 int game(int type, const struct Constant *c, struct Database g);
@@ -59,7 +59,10 @@ int game(int type, const struct Constant *c, struct Database g);
 /*fonction for human input*/
 void humanSelection(const struct Database *g, const struct Constant *c, int pxHamster, int pxCage, struct PurchaseSale *ps);
 
-
+int verification(int value, int available, int unite)
+{
+    return ((value*unite<=available && value>=0)) ? 1 : 0;
+}
 
 int secureInput(const char* text, int available, int unite)
 {
@@ -74,8 +77,8 @@ int secureInput(const char* text, int available, int unite)
         if(scanf("%d", &result))
         {
             if(result<0) printf("you should use positive number.\n");
-            else if(result*unite<=available) check = 0;
-            else printf("You don't have enought %s\n", text);
+            else if(verification(result, available, unite)) check = 0;
+            else printf("You don't have enough %s\n", text);
         }
         else printf("please use only digit.\n");
     }
@@ -86,15 +89,16 @@ int secureInput(const char* text, int available, int unite)
 
 int rand_a_b(int min, int max) 
 {
-    return ((rand()%(max-min)) + min);
+    if(min == max) return min;
+    else return ((rand()%(max-min)) + min);
 }
 
 void humanSelection(const struct Database *g, const struct Constant *c, int pxHamster, int pxFood, struct PurchaseSale *ps)
 {
-    int check = 0;
+    int check = 1;
     int a = 0;
     char exit;
-    while(a<10 && check==0)
+    do
     {
         printf("How many male hamster do you want to sold ?\n");
         ps->maleSolded = secureInput("male hamster", g->adultMale, 1);
@@ -114,21 +118,27 @@ void humanSelection(const struct Database *g, const struct Constant *c, int pxHa
         printf("How many food do you want to purchase ?\n");
         ps->foodBuy = secureInput("money", tempMoney, pxFood);
         tempMoney -= ps->foodBuy * pxFood;
-        printf("You buy %d cage(s) for %d$(new sold : %d$)\n\n", ps->foodBuy, (ps->foodBuy * pxFood), tempMoney);
+        printf("You buy %d kg of food for %d$(new sold : %d$)\n\n", ps->foodBuy, (ps->foodBuy * pxFood), tempMoney);
 
         printf("do you want to restart selection ? (tape 'r')\n");
-        if(getchar()!='r') check == 1;
+        fflush(stdin);
+        if(getchar()=='r') check == 0; // to fix;
     }
+    while(a<10 && check==0);
 }
 
 int game(int type, const struct Constant *c, struct Database g)
 {
+    srand(c->seed);
     //temp
     int pxHamster;
     int pxFood;
 
-    
-    while(g.week<c->weekMax)
+    int check = 0;
+
+    int totHamster = g.adultMale + g.adultFem + g.kidFem2 + g.kidMale2;
+
+    while(g.week<c->weekMax && check == 0)
     {
         g.week++;
         pxHamster = rand_a_b(c->pxHamsterMin, c->pxHamsterMax+1);
@@ -138,7 +148,7 @@ int game(int type, const struct Constant *c, struct Database g)
         g.adultFem += g.kidFem2;
         g.kidMale2 = g.kidMale;
         g.kidFem2 = g.kidFem;
-        int totHamster = g.adultMale + g.adultFem + g.kidFem2 + g.kidMale2;
+        
 
 
         struct PurchaseSale ps;
@@ -152,7 +162,7 @@ int game(int type, const struct Constant *c, struct Database g)
             printf("   %d kids males\n" , g.kidMale2);
             printf("   %d kids femelles\n" , g.kidFem2);
             printf("   %d hamsters au total\n" , totHamster);
-            printf("   %d kg de nourriture\n" , g.food);
+            printf("   %f kg de nourriture\n" , g.food);
             printf("   %d cages\n" , g.cage);
             printf("    \n");
             printf("les prix du jour sont:\n");
@@ -162,7 +172,7 @@ int game(int type, const struct Constant *c, struct Database g)
 
             humanSelection(&g, c, pxHamster, pxFood, &ps);
         }
-        if(type == 1)
+        else if(type == 1)
         {
             printf("Tt's turn %d\n" , g.week);
             printf("You own:\n");
@@ -172,7 +182,7 @@ int game(int type, const struct Constant *c, struct Database g)
             printf("   %d kids males\n" , g.kidMale2);
             printf("   %d kids femelles\n" , g.kidFem2);
             printf("   %d hamsters au total\n" , totHamster);
-            printf("   %d kg de nourriture\n" , g.food);
+            printf("   %f kg de nourriture\n" , g.food);
             printf("   %d cages\n" , g.cage);
             printf("    \n");
             printf("les prix du jour sont:\n");
@@ -185,29 +195,44 @@ int game(int type, const struct Constant *c, struct Database g)
             ps.foodBuy = 10;
             ps.cageBuy = 3;
         }
-        g.adultMale -= ps.maleSolded;
-        g.adultFem -= ps.femSolded;
-        g.food += ps.foodBuy;
-        g.cage += ps.cageBuy;
         
-        g.money = g.money + ((ps.maleSolded + ps.femSolded)*pxHamster) - (ps.cageBuy*c->pxCage + ps.foodBuy*pxFood);
-        printf("b\n");
+        //verification for all ps:
+        if(verification(ps.maleSolded, g.adultMale, 1)) g.adultMale -= ps.maleSolded;
+        else ps.maleSolded = 0;
+        if(verification(ps.femSolded, g.adultFem, 1)) g.adultFem -= ps.femSolded;
+        else ps.femSolded = 0;
+
+        g.money += (ps.maleSolded + ps.femSolded) * pxHamster;
+
+        if(verification(ps.foodBuy, g.money, pxFood)) g.food += ps.foodBuy;
+        else ps.foodBuy = 0;
+
+        g.money -=  ps.foodBuy * pxFood; 
+
+        if(verification(ps.cageBuy, g.money, c->pxCage))g.cage += ps.cageBuy;
+        else ps.cageBuy = 0;
+        
+        g.money -= ps.cageBuy * (c->pxCage);
+        
+
         //create the babies
         int couple = (g.adultFem<g.adultMale) ? g.adultFem : g.adultMale;
-        
-        int newBabies = (couple==0) ? 0 : rand_a_b((c->fertilMin)*couple, (c->fertilMax)*couple);
-        printf("a\n");
-        printf("babies : %d",newBabies);
+        int newBabies = (couple==0) ? 0 : rand_a_b((c->fertilMin)*couple, (c->fertilMax)*couple); // paren
+
+        //printf("babies : %d\n",newBabies);
 
         //kill time:
         //  from cage limitation
         totHamster = g.adultMale + g.adultFem + g.kidFem2 + g.kidMale2 + newBabies;
-        if(totHamster > (g.cage * c->spaceCage)) newBabies = (g.cage * c->spaceCage) - totHamster;
+        if(totHamster > (g.cage * c->spaceCage)) newBabies = (g.cage * (c->spaceCage)) - totHamster;
         totHamster = g.adultMale + g.adultFem + g.kidFem2 + g.kidMale2 + newBabies;
+        printf("   %d hamsters au total\n" , totHamster);
         //  from food:
         int death = (totHamster<=g.food/c->foodWeek) ? 0 : g.food/c->foodWeek - totHamster;
-        g.food = (death != 0) ? g.food = 0 : (g.food - totHamster*c->foodWeek);
-        printf("death : %d",death);
+        printf("   %f kg de nourriture 1\n" , g.food);
+        g.food = (death != 0) ?  0 : (g.food - totHamster * (c->foodWeek)); // paren
+        printf("   %f kg de nourriture 2\n" , g.food);
+        printf("death : %d\n",death);
 
         if(newBabies<=death)
         {
@@ -287,9 +312,21 @@ int game(int type, const struct Constant *c, struct Database g)
         }
         totHamster = g.adultMale + g.adultFem + g.kidFem2 + g.kidMale2 + newBabies;
         printf("   %d hamsters au total\n" , totHamster);
+        printf("babies : %d\n",newBabies);
+        g.kidFem = rand_a_b(0, newBabies);
+        g.kidMale = newBabies - g.kidFem;
+
+        if(totHamster == 0) check = 1;
     }
 
-    //return g.money;
+    int score = totHamster * c->pxHamsterMax + g.money;
+    if(check) printf("You loose : GAME OVER !");
+    else
+    {
+        printf("Well play you win, you earn %d", score);
+    }
+
+    return score;
 }
 
 int main(int argc, char *argv[])
@@ -322,13 +359,13 @@ int main(int argc, char *argv[])
     g.kidMale2 = 0;
     g.kidFem2 = 0;
     g.money = 1000;
-    g.food = 1;
+    g.food = 1.0;
     g.cage = 1;
     g.week = 0;
 
-    printf("start\n");
     game(0, &c, g);
-    printf("end\n");
+
+
     //if(argc<2) game(0);//set seed
     //else game(rand(), 0);
 }
